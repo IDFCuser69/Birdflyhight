@@ -1,63 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Awesome New Game</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        /* Simple styling for the game area */
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #333; /* Dark background */
-            color: white;
-            font-family: sans-serif;
-            flex-direction: column;
-        }
-        #game-canvas {
-            border: 2px solid gold;
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Cool Bird 🐦</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #87CEEB, #e0f7fa);
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: url("bg.png") no-repeat center center/cover;
+    }
+  </style>
 </head>
 <body>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
 
-    <div id="game-container">
-        <h1>Welcome to My Awesome Game!</h1>
-        <canvas id="game-canvas" width="480" height="640">
-            </canvas>
-        <p id="status">Loading assets...</p>
-    </div>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-    <script>
-        // *** 🎨 IMAGE AND AUDIO CONFIGURATION (CHANGE THESE) ***
-        const GAME_ASSETS = {
-            // Player
-            playerImage: 'assets/images/hero.png',
+    // 🎨 Load images (customize names)
+    const birdImg = new Image();
+    birdImg.src = "bird.png"; // change with your custom image
+    const pipeTopImg = new Image();
+    pipeTopImg.src = "pipeTop.png";
+    const pipeBottomImg = new Image();
+    pipeBottomImg.src = "pipeBottom.png";
 
-            // Obstacles (Pipes/Pillars)
-            topPipeImage: 'assets/images/pipe_top.png',
-            bottomPipeImage: 'assets/images/pipe_bottom.png',
+    // 🔊 Load sound
+    const flySound = new Audio("fly.mp3");
+    const hitSound = new Audio("hit.mp3");
 
-            // Audio Files
-            flapSound: 'assets/audio/flap.mp3',
-            backgroundMusic: 'assets/audio/music.mp3',
-            
-            // You can add more assets here (e.g., background, score sound)
-        };
+    let bird = { x: 50, y: 150, width: 34, height: 24, gravity: 0.25, lift: -5.5, velocity: 0 };
+    let pipes = [];
+    let frame = 0;
+    let score = 0;
+    let gameOver = false;
 
-        // Display the paths (for testing)
-        document.getElementById('status').innerText = 
-            `Assets ready! Hero: ${GAME_ASSETS.playerImage}, Flap SFX: ${GAME_ASSETS.flapSound}`;
+    function resetGame() {
+      bird.y = 150;
+      bird.velocity = 0;
+      pipes = [];
+      score = 0;
+      gameOver = false;
+    }
 
-        // In a real game.js file, you would now use these paths to load the assets.
-    </script>
+    function drawBird() {
+      ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+    }
 
-    <script src="game.js"></script> 
+    function drawPipes() {
+      for (let pipe of pipes) {
+        ctx.drawImage(pipeTopImg, pipe.x, pipe.topY, pipe.width, pipe.topHeight);
+        ctx.drawImage(pipeBottomImg, pipe.x, pipe.bottomY, pipe.width, pipe.bottomHeight);
+      }
+    }
 
+    function updatePipes() {
+      if (frame % 120 === 0) { // more gap between pipes
+        let topHeight = Math.random() * 150 + 80;
+        let gap = 130; // adjustable gap
+        pipes.push({
+          x: canvas.width,
+          width: 52,
+          topY: 0,
+          topHeight: topHeight,
+          bottomY: topHeight + gap,
+          bottomHeight: canvas.height - (topHeight + gap)
+        });
+      }
+
+      for (let i = 0; i < pipes.length; i++) {
+        pipes[i].x -= 2; // slower pipe speed
+        if (pipes[i].x + pipes[i].width < 0) {
+          pipes.splice(i, 1);
+          score++;
+        }
+      }
+    }
+
+    function detectCollision(pipe) {
+      if (
+        bird.x < pipe.x + pipe.width &&
+        bird.x + bird.width > pipe.x &&
+        (bird.y < pipe.topY + pipe.topHeight || bird.y + bird.height > pipe.bottomY)
+      ) {
+        hitSound.play();
+        gameOver = true;
+      }
+    }
+
+    function drawScore() {
+      ctx.fillStyle = "#000";
+      ctx.font = "20px Arial";
+      ctx.fillText("Score: " + score, 10, 30);
+    }
+
+    function update() {
+      if (gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.font = "30px Arial";
+        ctx.fillText("Game Over", 120, 250);
+        ctx.font = "18px Arial";
+        ctx.fillText("Restarting...", 145, 290);
+
+        setTimeout(resetGame, 1500);
+        return;
+      }
+
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+      if (bird.y + bird.height > canvas.height || bird.y < 0) gameOver = true;
+
+      updatePipes();
+
+      for (let pipe of pipes) detectCollision(pipe);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPipes();
+      drawBird();
+      drawScore();
+
+      frame++;
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener("keydown", fly);
+    document.addEventListener("touchstart", fly);
+
+    function fly() {
+      bird.velocity = bird.lift;
+      flySound.play();
+    }
+
+    update();
+  </script>
 </body>
 </html>
