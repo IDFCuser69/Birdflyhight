@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Cool Bird 🐦</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Custom Bird 🐦</title>
   <style>
     body {
       margin: 0;
+      background: linear-gradient(to bottom, #87CEEB, #B3E5FC);
       overflow: hidden;
-      background: linear-gradient(to bottom, #87CEEB, #e0f7fa);
     }
     canvas {
       display: block;
@@ -24,19 +24,24 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // 🎨 Load images (customize names)
+    // 🖼️ Placeholder images (replace later)
     const birdImg = new Image();
-    birdImg.src = "bird.png"; // change with your custom image
+    birdImg.src = "bird.png"; // replace later
     const pipeTopImg = new Image();
-    pipeTopImg.src = "pipeTop.png";
+    pipeTopImg.src = "pipeTop.png"; // replace later
     const pipeBottomImg = new Image();
-    pipeBottomImg.src = "pipeBottom.png";
+    pipeBottomImg.src = "pipeBottom.png"; // replace later
 
-    // 🔊 Load sound
-    const flySound = new Audio("fly.mp3");
+    // 🔊 Random funny sounds (replace later)
+    const jumpSounds = [
+      new Audio("funny1.mp3"),
+      new Audio("funny2.mp3"),
+      new Audio("funny3.mp3")
+    ];
     const hitSound = new Audio("hit.mp3");
 
-    let bird = { x: 50, y: 150, width: 34, height: 24, gravity: 0.25, lift: -5.5, velocity: 0 };
+    // 🎮 Game variables
+    let bird = { x: 60, y: 150, width: 34, height: 24, gravity: 0.25, lift: -5.8, velocity: 0 };
     let pipes = [];
     let frame = 0;
     let score = 0;
@@ -62,9 +67,9 @@
     }
 
     function updatePipes() {
-      if (frame % 120 === 0) { // more gap between pipes
+      if (frame % 100 === 0) {
         let topHeight = Math.random() * 150 + 80;
-        let gap = 130; // adjustable gap
+        let gap = 140;
         pipes.push({
           x: canvas.width,
           width: 52,
@@ -76,7 +81,7 @@
       }
 
       for (let i = 0; i < pipes.length; i++) {
-        pipes[i].x -= 2; // slower pipe speed
+        pipes[i].x -= 2; // pipe speed
         if (pipes[i].x + pipes[i].width < 0) {
           pipes.splice(i, 1);
           score++;
@@ -110,8 +115,7 @@
         ctx.fillText("Game Over", 120, 250);
         ctx.font = "18px Arial";
         ctx.fillText("Restarting...", 145, 290);
-
-        setTimeout(resetGame, 1500);
+        setTimeout(resetGame, 2000);
         return;
       }
 
@@ -132,12 +136,14 @@
       requestAnimationFrame(update);
     }
 
+    // 🖱️ Controls
     document.addEventListener("keydown", fly);
     document.addEventListener("touchstart", fly);
 
     function fly() {
       bird.velocity = bird.lift;
-      flySound.play();
+      const randomSound = jumpSounds[Math.floor(Math.random() * jumpSounds.length)];
+      randomSound.play();
     }
 
     update();
