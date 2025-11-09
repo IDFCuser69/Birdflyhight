@@ -1,119 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bird Fly Height</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: linear-gradient(to bottom, #70c5ce, #ffffff);
-      overflow: hidden;
-    }
-    canvas {
-      display: block;
-      margin: auto;
-      background: url('background.png') repeat-x;
-      background-size: cover;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Awesome New Game</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Simple styling for the game area */
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #333; /* Dark background */
+            color: white;
+            font-family: sans-serif;
+            flex-direction: column;
+        }
+        #game-canvas {
+            border: 2px solid gold;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    <div id="game-container">
+        <h1>Welcome to My Awesome Game!</h1>
+        <canvas id="game-canvas" width="480" height="640">
+            </canvas>
+        <p id="status">Loading assets...</p>
+    </div>
 
-    let birdImg = new Image();
-    birdImg.src = "bird.png"; // <-- yahan apni custom ball/bird image ka naam daalna
+    <script>
+        // *** 🎨 IMAGE AND AUDIO CONFIGURATION (CHANGE THESE) ***
+        const GAME_ASSETS = {
+            // Player
+            playerImage: 'assets/images/hero.png',
 
-    let flySound = new Audio("funny.mp3"); // <-- yahan apna random funny sound daalna
-    let gravity = 0.4;
-    let jump = -7;
-    let speed = 2.3;
+            // Obstacles (Pipes/Pillars)
+            topPipeImage: 'assets/images/pipe_top.png',
+            bottomPipeImage: 'assets/images/pipe_bottom.png',
 
-    let bird = { x: 50, y: 150, radius: 18, velocity: 0 };
-    let pipes = [];
-    let frame = 0;
-    let score = 0;
-    let gameOver = false;
+            // Audio Files
+            flapSound: 'assets/audio/flap.mp3',
+            backgroundMusic: 'assets/audio/music.mp3',
+            
+            // You can add more assets here (e.g., background, score sound)
+        };
 
-    document.addEventListener("keydown", () => {
-      bird.velocity = jump;
-      flySound.play();
-    });
-    document.addEventListener("touchstart", () => {
-      bird.velocity = jump;
-      flySound.play();
-    });
+        // Display the paths (for testing)
+        document.getElementById('status').innerText = 
+            `Assets ready! Hero: ${GAME_ASSETS.playerImage}, Flap SFX: ${GAME_ASSETS.flapSound}`;
 
-    function drawBird() {
-      ctx.drawImage(birdImg, bird.x - bird.radius, bird.y - bird.radius, bird.radius * 2, bird.radius * 2);
-    }
+        // In a real game.js file, you would now use these paths to load the assets.
+    </script>
 
-    function drawPipes() {
-      pipes.forEach(p => {
-        ctx.fillStyle = "#2ecc71";
-        ctx.fillRect(p.x, 0, p.width, p.top);
-        ctx.fillRect(p.x, p.top + p.gap, p.width, canvas.height - (p.top + p.gap));
-      });
-    }
+    <script src="game.js"></script> 
 
-    function update() {
-      if (gameOver) return;
-
-      frame++;
-      bird.velocity += gravity;
-      bird.y += bird.velocity;
-
-      if (frame % 100 === 0) {
-        let top = Math.random() * (canvas.height / 2);
-        let gap = 140;
-        pipes.push({ x: canvas.width, top, width: 50, gap });
-      }
-
-      pipes.forEach((p, i) => {
-        p.x -= speed;
-        if (p.x + p.width < 0) {
-          pipes.splice(i, 1);
-          score++;
-        }
-
-        // Collision
-        if (
-          bird.x + bird.radius > p.x &&
-          bird.x - bird.radius < p.x + p.width &&
-          (bird.y - bird.radius < p.top || bird.y + bird.radius > p.top + p.gap)
-        ) {
-          gameOver = true;
-        }
-      });
-
-      if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
-        gameOver = true;
-      }
-
-      draw();
-      requestAnimationFrame(update);
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawPipes();
-      drawBird();
-      ctx.fillStyle = "#000";
-      ctx.font = "20px Arial";
-      ctx.fillText(`Score: ${score}`, 10, 25);
-
-      if (gameOver) {
-        ctx.fillStyle = "red";
-        ctx.font = "30px Arial";
-        ctx.fillText("Game Over!", 120, 300);
-      }
-    }
-
-    update();
-  </script>
 </body>
 </html>
