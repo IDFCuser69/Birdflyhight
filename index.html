@@ -3,128 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flappy Ball by Shubhankar</title>
+  <title>Flappy Custom Bird 🐦</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
+      margin: 0;
+      background: linear-gradient(to bottom, #87CEEB, #B3E5FC);
       overflow: hidden;
-      background: linear-gradient(to bottom, #87ceeb, #fff);
     }
     canvas {
       display: block;
       margin: auto;
-      background: #70c5ce;
-    }
-    #startBtn {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ffcc00;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-size: 18px;
-      cursor: pointer;
+      background: url("bg.png") no-repeat center center/cover;
     }
   </style>
 </head>
 <body>
-  <button id="startBtn">Start Game 🎮</button>
   <canvas id="gameCanvas" width="400" height="600"></canvas>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const startBtn = document.getElementById("startBtn");
 
-    let ballImg = new Image();
-    ballImg.src = "https://i.postimg.cc/Z5YrDx0r/ball.png"; // apna custom image link yahan daalna
+    // 🖼️ Placeholder images (replace later)
+    const birdImg = new Image();
+    birdImg.src = "bird.png"; // replace later
+    const pipeTopImg = new Image();
+    pipeTopImg.src = "pipeTop.png"; // replace later
+    const pipeBottomImg = new Image();
+    pipeBottomImg.src = "pipeBottom.png"; // replace later
 
-    let ball = { x: 80, y: 150, radius: 20, gravity: 0.3, velocity: 0, lift: -6 };
+    // 🔊 Random funny sounds (replace later)
+    const jumpSounds = [
+      new Audio("funny1.mp3"),
+      new Audio("funny2.mp3"),
+      new Audio("funny3.mp3")
+    ];
+    const hitSound = new Audio("hit.mp3");
+
+    // 🎮 Game variables
+    let bird = { x: 60, y: 150, width: 34, height: 24, gravity: 0.25, lift: -5.8, velocity: 0 };
     let pipes = [];
     let frame = 0;
+    let score = 0;
     let gameOver = false;
 
-    function drawBall() {
-      ctx.drawImage(ballImg, ball.x - 20, ball.y - 20, 40, 40);
+    function resetGame() {
+      bird.y = 150;
+      bird.velocity = 0;
+      pipes = [];
+      score = 0;
+      gameOver = false;
+    }
+
+    function drawBird() {
+      ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
     }
 
     function drawPipes() {
-      for (let p of pipes) {
-        ctx.fillStyle = "#228B22";
-        ctx.fillRect(p.x, 0, 50, p.top);
-        ctx.fillRect(p.x, canvas.height - p.bottom, 50, p.bottom);
+      for (let pipe of pipes) {
+        ctx.drawImage(pipeTopImg, pipe.x, pipe.topY, pipe.width, pipe.topHeight);
+        ctx.drawImage(pipeBottomImg, pipe.x, pipe.bottomY, pipe.width, pipe.bottomHeight);
       }
     }
 
     function updatePipes() {
-      if (frame % 90 === 0) {
-        let top = Math.random() * 200 + 50;
-        let bottom = 600 - top - 150;
-        pipes.push({ x: 400, top, bottom });
+      if (frame % 100 === 0) {
+        let topHeight = Math.random() * 150 + 80;
+        let gap = 140;
+        pipes.push({
+          x: canvas.width,
+          width: 52,
+          topY: 0,
+          topHeight: topHeight,
+          bottomY: topHeight + gap,
+          bottomHeight: canvas.height - (topHeight + gap)
+        });
       }
-      for (let p of pipes) {
-        p.x -= 2;
-      }
-      pipes = pipes.filter(p => p.x > -50);
-    }
 
-    function checkCollision() {
-      for (let p of pipes) {
-        if (
-          ball.x + 20 > p.x && ball.x - 20 < p.x + 50 &&
-          (ball.y - 20 < p.top || ball.y + 20 > 600 - p.bottom)
-        ) {
-          return true;
+      for (let i = 0; i < pipes.length; i++) {
+        pipes[i].x -= 2; // pipe speed
+        if (pipes[i].x + pipes[i].width < 0) {
+          pipes.splice(i, 1);
+          score++;
         }
       }
-      return ball.y + 20 > canvas.height;
     }
 
-    function playRandomFunnyAudio() {
-      const sounds = [
-        "https://www.myinstants.com/media/sounds/cartoon-fall.mp3",
-        "https://www.myinstants.com/media/sounds/funny-fart.mp3",
-        "https://www.myinstants.com/media/sounds/wilhelm-scream.mp3"
-      ];
-      const audio = new Audio(sounds[Math.floor(Math.random() * sounds.length)]);
-      audio.play();
-    }
-
-    function loop() {
-      if (gameOver) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      drawPipes();
-      drawBall();
-
-      ball.velocity += ball.gravity;
-      ball.y += ball.velocity;
-      updatePipes();
-
-      if (checkCollision()) {
+    function detectCollision(pipe) {
+      if (
+        bird.x < pipe.x + pipe.width &&
+        bird.x + bird.width > pipe.x &&
+        (bird.y < pipe.topY + pipe.topHeight || bird.y + bird.height > pipe.bottomY)
+      ) {
+        hitSound.play();
         gameOver = true;
-        playRandomFunnyAudio();
-        alert("Game Over! 😂 Tap Start to play again!");
-        window.location.reload();
+      }
+    }
+
+    function drawScore() {
+      ctx.fillStyle = "#000";
+      ctx.font = "20px Arial";
+      ctx.fillText("Score: " + score, 10, 30);
+    }
+
+    function update() {
+      if (gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.font = "30px Arial";
+        ctx.fillText("Game Over", 120, 250);
+        ctx.font = "18px Arial";
+        ctx.fillText("Restarting...", 145, 290);
+        setTimeout(resetGame, 2000);
+        return;
       }
 
+      bird.velocity += bird.gravity;
+      bird.y += bird.velocity;
+      if (bird.y + bird.height > canvas.height || bird.y < 0) gameOver = true;
+
+      updatePipes();
+
+      for (let pipe of pipes) detectCollision(pipe);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPipes();
+      drawBird();
+      drawScore();
+
       frame++;
-      requestAnimationFrame(loop);
+      requestAnimationFrame(update);
     }
 
-    startBtn.onclick = () => {
-      ball.y = 150;
-      ball.velocity = 0;
-      pipes = [];
-      gameOver = false;
-      loop();
-    };
+    // 🖱️ Controls
+    document.addEventListener("keydown", fly);
+    document.addEventListener("touchstart", fly);
 
-    document.addEventListener("touchstart", () => {
-      ball.velocity = ball.lift;
-    });
+    function fly() {
+      bird.velocity = bird.lift;
+      const randomSound = jumpSounds[Math.floor(Math.random() * jumpSounds.length)];
+      randomSound.play();
+    }
+
+    update();
   </script>
 </body>
 </html>
