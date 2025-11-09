@@ -60,14 +60,14 @@
     }
 
     function updatePipes() {
-      if (frame % 120 === 0) { // horizontal gap thoda zyada
-        let gap = 170; // vertical gap thoda zyada
+      if (frame % 120 === 0) {
+        let gap = 170;
         let top = Math.random() * 200 + 50;
         let bottom = 600 - top - gap;
         pipes.push({ x: 400, top, bottom });
       }
       for (let p of pipes) {
-        p.x -= 1.8; // thoda slow movement
+        p.x -= 1.8;
       }
       pipes = pipes.filter(p => p.x > -50);
     }
@@ -118,13 +118,25 @@
       requestAnimationFrame(loop);
     }
 
+    // ✅ FIXED VERSION
     startBtn.onclick = () => {
-      ball.y = 150;
-      ball.velocity = 0;
-      pipes = [];
-      frame = 0;
-      gameOver = false;
-      loop();
+      startBtn.style.display = "none"; // button hide kar
+      ballImg.onload = () => { // ensure image load hone ke baad game chale
+        ball.y = 150;
+        ball.velocity = 0;
+        pipes = [];
+        frame = 0;
+        gameOver = false;
+        loop();
+      };
+      if (ballImg.complete) { // agar image pehle se loaded hai
+        ball.y = 150;
+        ball.velocity = 0;
+        pipes = [];
+        frame = 0;
+        gameOver = false;
+        loop();
+      }
     };
 
     document.addEventListener("touchstart", () => {
